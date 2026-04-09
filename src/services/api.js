@@ -19,11 +19,16 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 — token expired or invalid → clear session and reload to login
+// Handle 401 — only redirect if it's NOT the login endpoint
 API.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401) {
+    const url = error.config?.url || "";
+    const isLoginEndpoint = url.includes("/auth/login") ||
+      url.includes("/student/register") ||
+      url.includes("/employer/register");
+
+    if (error.response?.status === 401 && !isLoginEndpoint) {
       sessionStorage.removeItem("placement_session");
       window.location.href = "/login";
     }

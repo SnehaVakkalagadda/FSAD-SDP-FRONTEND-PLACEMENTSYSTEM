@@ -84,7 +84,7 @@ export function PlacementDataProvider({ children }) {
     if (session.role === "employer") loadEmployerJobs(session.user.id);
     if (session.role === "placement-officer") loadOfficerApplications();
     if (session.role === "admin") loadAdminData();
-  }, [session?.role, session?.user?.id]); // eslint-disable-line
+  }, [session?.role, session?.user?.id, session?.user?.username]); // eslint-disable-line
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
