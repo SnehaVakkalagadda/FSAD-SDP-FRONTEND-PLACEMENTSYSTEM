@@ -22,8 +22,8 @@ export function PlacementDataProvider({ children }) {
   const currentUser = session?.user || null;
   const currentRole = session?.role || null;
 
-  function persist(user, role) {
-    const s = { user, role };
+  function persist(user, role, token) {
+    const s = { user, role, token };
     setSession(s);
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
   }
@@ -88,7 +88,37 @@ export function PlacementDataProvider({ children }) {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
-  // Student: { name, email, password, branch, resume, cgpa, year }
+  // Frontend role → backend AuthRequestDTO role string
+  const ROLE_MAP = {
+    student: "STUDENT",
+    employer: "EMPLOYER",
+    "placement-officer": "PLACEMENT OFFICER",
+    admin: "ADMIN",
+  };
+
+  // POST /auth/login — body: { login, password, role }
+  // Response: { token, role, user: { ...entity } }
+  const login = async ({ role, email, password }) => {
+    try {
+      const res = await API.post("/auth/login", {
+        login: email,
+        password: password,
+        role: ROLE_MAP[role],
+      });
+      const { token, user } = res.data;
+      persist(user, role, token);
+      return { ok: true };
+    } catch (e) {
+      const status = e.response?.status;
+      const data = e.response?.data;
+      const msg = status === 401 || status === 404
+        ? "Invalid credentials"
+        : typeof data === "string" ? data : "Server error. Try again.";
+      return { ok: false, message: msg };
+    }
+  };
+
+  // Student register — public endpoint, no token needed
   const studentRegister = async (data) => {
     try {
       await API.post("/student/register", {
@@ -107,7 +137,7 @@ export function PlacementDataProvider({ children }) {
     }
   };
 
-  // Employer: { companyName, email, password }
+  // Employer register — public endpoint, no token needed
   const employerRegister = async (data) => {
     try {
       await API.post("/employer/register", {
@@ -118,27 +148,6 @@ export function PlacementDataProvider({ children }) {
       return { ok: true };
     } catch (e) {
       const msg = typeof e.response?.data === "string" ? e.response.data : "Registration failed";
-      return { ok: false, message: msg };
-    }
-  };
-
-  const login = async ({ role, email, password }) => {
-    const endpoints = {
-      student: "/student/login",
-      employer: "/employer/login",
-      "placement-officer": "/officer/login",
-      admin: "/admin/login",
-    };
-    try {
-      const res = await API.post(
-        `${endpoints[role]}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
-      );
-      persist(res.data, role);
-      return { ok: true };
-    } catch (e) {
-      const msg = e.response?.status === 401 || e.response?.status === 404
-        ? "Invalid credentials"
-        : "Server error. Try again.";
       return { ok: false, message: msg };
     }
   };
@@ -155,7 +164,6 @@ export function PlacementDataProvider({ children }) {
 
   // ── Student ops ───────────────────────────────────────────────────────────
 
-  // PUT /student/updateprofile — full Student object with id
   const updateStudentProfile = async (data) => {
     try {
       await API.put("/student/updateprofile", {
@@ -168,7 +176,7 @@ export function PlacementDataProvider({ children }) {
         cgpa: parseFloat(data.cgpa),
         year: parseInt(data.year),
       });
-      persist({ ...currentUser, ...data }, currentRole);
+      persist({ ...currentUser, ...data }, currentRole, session?.token);
       return { ok: true };
     } catch (e) {
       const msg = typeof e.response?.data === "string" ? e.response.data : "Update failed";
@@ -180,12 +188,10 @@ export function PlacementDataProvider({ children }) {
   const applyJob = async (jobId) => {
     try {
       const studentId = Number(currentUser.id);
-      const numericJobId = Number(jobId);
       await API.post("/student/applyjob", {
         studentId: studentId,
-        jobId: numericJobId,
+        jobId: Number(jobId),
       });
-      // refresh applications list
       const res = await API.get(`/student/viewapplications/${studentId}`);
       setApplications(Array.isArray(res.data) ? res.data : []);
       return { ok: true };
@@ -197,7 +203,6 @@ export function PlacementDataProvider({ children }) {
 
   // ── Employer ops ──────────────────────────────────────────────────────────
 
-  // PUT /employer/updateprofile — full Employer object with id
   const updateEmployerProfile = async (data) => {
     try {
       await API.put("/employer/updateprofile", {
@@ -206,7 +211,7 @@ export function PlacementDataProvider({ children }) {
         email: data.email,
         password: data.password || currentUser.password,
       });
-      persist({ ...currentUser, ...data }, currentRole);
+      persist({ ...currentUser, ...data }, currentRole, session?.token);
       return { ok: true };
     } catch (e) {
       const msg = typeof e.response?.data === "string" ? e.response.data : "Update failed";
@@ -241,9 +246,7 @@ export function PlacementDataProvider({ children }) {
         return [...others, ...incoming];
       });
       return incoming;
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   };
 
   // ── Officer ops ───────────────────────────────────────────────────────────
@@ -272,7 +275,6 @@ export function PlacementDataProvider({ children }) {
         email: data.email.trim(),
         password: data.password,
       });
-      // fetch updated officers list; 404 = none yet, keep existing
       try {
         const oRes = await API.get("/admin/displayofficers");
         if (Array.isArray(oRes.data)) setOfficers(oRes.data);
