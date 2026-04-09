@@ -1,165 +1,129 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Search, TrendingUp, Users, Briefcase, CheckCircle2 } from "lucide-react";
+import { FileText } from "lucide-react";
 import { usePlacementData } from "../../context/PlacementDataContext";
+import { toast } from "sonner";
+
+const STATUS_COLORS = {
+  applied: "bg-yellow-100 text-yellow-800",
+  reviewing: "bg-blue-100 text-blue-800",
+  shortlisted: "bg-purple-100 text-purple-800",
+  accepted: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
+};
+
+const STATUSES = ["Reviewing", "Shortlisted", "Accepted", "Rejected"];
 
 function PlacementRecords() {
-  const { applications, jobs, students } = usePlacementData();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const { applications, jobs, updateApplicationStatus } = usePlacementData();
+  const [filter, setFilter] = useState("all");
+  const [updating, setUpdating] = useState(null);
 
-  const placedApplications = applications.filter((app) => app.status === "accepted");
+  const filtered = filter === "all"
+    ? applications
+    : applications.filter((a) => a.status?.toLowerCase() === filter);
 
-  const filteredRecords = placedApplications.filter((app) =>
-    app.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    app.studentEmail?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const getJobTitle = (jobId) => jobs.find((j) => Number(j.id) === Number(jobId))?.title || `Job #${jobId}`;
+  const colorFor = (s) => STATUS_COLORS[s?.toLowerCase()] || "bg-gray-100 text-gray-700";
 
-  const getJobDetails = (jobId) => jobs.find((j) => j.id === jobId);
-
-  const placementRate = students.length
-    ? (placedApplications.length / students.length) * 100
-    : 0;
-
-  const averageCGPA =
-    placedApplications.reduce((sum, app) => sum + (app.studentCGPA || 0), 0) /
-      (placedApplications.length || 1);
+  const handleStatusUpdate = async (app, status) => {
+    setUpdating(app.id);
+    // PUT /officer/updatestatus?applicationId=&status=&studentId=
+    const result = await updateApplicationStatus(app.id, status, app.studentId);
+    setUpdating(null);
+    if (result.ok) toast.success(`Status updated to ${status}`);
+    else toast.error(result.message);
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h2 className="text-2xl mb-2">Placement Records</h2>
-        <p className="text-gray-600">Track and monitor student placement records</p>
+        <h2 className="text-2xl font-semibold mb-1">All Applications</h2>
+        <p className="text-gray-500 text-sm">View and update student application statuses</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Total Placements</CardTitle>
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-green-600">{placedApplications.length}</div>
-            <p className="text-xs text-muted-foreground">Students placed</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Placement Rate</CardTitle>
-            <TrendingUp className="w-4 h-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-blue-600">{placementRate.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">Of total students</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Avg. Student CGPA</CardTitle>
-            <Users className="w-4 h-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-purple-600">{averageCGPA.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Placed students</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Unique Companies</CardTitle>
-            <Briefcase className="w-4 h-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-orange-600">
-              {new Set(placedApplications.map((app) => getJobDetails(app.jobId)?.company)).size}
-            </div>
-            <p className="text-xs text-muted-foreground">Hiring companies</p>
-          </CardContent>
-        </Card>
+      {/* Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {[
+          { label: "Total", val: applications.length, color: "text-gray-900" },
+          { label: "Applied", val: applications.filter((a) => a.status?.toLowerCase() === "applied").length, color: "text-yellow-600" },
+          { label: "Shortlisted", val: applications.filter((a) => a.status?.toLowerCase() === "shortlisted").length, color: "text-purple-600" },
+          { label: "Accepted", val: applications.filter((a) => a.status?.toLowerCase() === "accepted").length, color: "text-green-600" },
+          { label: "Rejected", val: applications.filter((a) => a.status?.toLowerCase() === "rejected").length, color: "text-red-600" },
+        ].map(({ label, val, color }) => (
+          <Card key={label}>
+            <CardContent className="pt-5">
+              <div className={`text-2xl font-semibold ${color}`}>{val}</div>
+              <p className="text-xs text-gray-500 mt-1">{label}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search by student name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Records</SelectItem>
-                <SelectItem value="recent">Recent (30 days)</SelectItem>
-                <SelectItem value="this-month">This Month</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filter */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">{filtered.length} application{filtered.length !== 1 ? "s" : ""}</p>
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="applied">Applied</SelectItem>
+            <SelectItem value="reviewing">Reviewing</SelectItem>
+            <SelectItem value="shortlisted">Shortlisted</SelectItem>
+            <SelectItem value="accepted">Accepted</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Placement Records</CardTitle>
-          <CardDescription>
-            Showing {filteredRecords.length} placement record{filteredRecords.length !== 1 ? "s" : ""}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student Name</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>CGPA</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Placement Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRecords.map((record) => {
-                const job = getJobDetails(record.jobId);
-                return (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      <div>
-                        <p className="text-sm">{record.studentName}</p>
-                        <p className="text-xs text-gray-500">{record.studentEmail}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{record.studentDepartment}</TableCell>
-                    <TableCell>
-                      <Badge variant={record.studentCGPA >= 8 ? "default" : "secondary"}>
-                        {record.studentCGPA?.toFixed(2)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{job?.company}</TableCell>
-                    <TableCell>{job?.title}</TableCell>
-                    <TableCell>{new Date(record.lastUpdated).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <Badge className="bg-green-100 text-green-800">Placed</Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          {filteredRecords.length === 0 && (
-            <div className="text-center py-8 text-gray-500">No placement records found</div>
-          )}
-        </CardContent>
-      </Card>
+      {/* List */}
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-gray-400">
+              <FileText className="w-10 h-10 mx-auto mb-3" />
+              <p>No applications found</p>
+            </CardContent>
+          </Card>
+        ) : (
+          filtered.map((app) => (
+            <Card key={app.id}>
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-base">{getJobTitle(app.jobId)}</CardTitle>
+                    <CardDescription>
+                      Student ID: {app.studentId} · Application ID: {app.id}
+                    </CardDescription>
+                  </div>
+                  <Badge className={colorFor(app.status)}>{app.status}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-gray-500 mb-2">Update Status:</p>
+                <div className="flex flex-wrap gap-2">
+                  {STATUSES.map((s) => (
+                    <Button
+                      key={s}
+                      size="sm"
+                      variant={app.status?.toLowerCase() === s.toLowerCase() ? "default" : "outline"}
+                      disabled={updating === app.id}
+                      onClick={() => handleStatusUpdate(app, s)}
+                    >
+                      {s}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 }

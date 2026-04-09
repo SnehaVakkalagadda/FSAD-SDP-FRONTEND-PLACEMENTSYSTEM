@@ -6,7 +6,6 @@ import { StudentDashboard } from "./components/dashboards/StudentDashboard";
 import { EmployerDashboard } from "./components/dashboards/EmployerDashboard";
 import { AdminDashboard } from "./components/dashboards/AdminDashboard";
 import { PlacementOfficerDashboard } from "./components/dashboards/PlacementOfficerDashboard";
-import { JobDetailsPage } from "./components/jobs/JobDetailsPage";
 
 const router = createBrowserRouter([
   {
@@ -19,8 +18,7 @@ const router = createBrowserRouter([
       { path: "student", Component: StudentDashboard },
       { path: "employer", Component: EmployerDashboard },
       { path: "admin", Component: AdminDashboard },
-      { path: "placement-officer", Component: PlacementOfficerDashboard },
-      { path: "job/:id", Component: JobDetailsPage },
+      { path: "officer", Component: PlacementOfficerDashboard },
     ],
   },
 ]);

@@ -1,146 +1,96 @@
-import { jsx, jsxs } from "react/jsx-runtime";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
-import { Separator } from "../ui/separator";
-import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Shield, Server, User, Mail } from "lucide-react";
 import { usePlacementData } from "../../context/PlacementDataContext";
+
 function SystemSettings() {
-  const { settings, updateSettings, resetSettings } = usePlacementData();
+  const { currentUser } = usePlacementData();
 
-  const handleInputChange = (key, value) => {
-    updateSettings({ [key]: value });
-  };
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-2xl font-semibold mb-1">Settings</h2>
+        <p className="text-gray-500 text-sm">Admin profile and system details</p>
+      </div>
 
-  const handleSave = () => {
-    toast.success("Settings saved successfully");
-  };
+      {/* Admin Profile */}
+      <Card>
+        <CardHeader>
+          <CardTitle style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <User style={{ width: 18, height: 18, color: "var(--primary)" }} />
+            Admin Profile
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: "50%",
+                background: "var(--primary)", color: "#fff",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "1.25rem", fontWeight: 700, flexShrink: 0,
+              }}>
+                {(currentUser?.username || currentUser?.email || "A")[0].toUpperCase()}
+              </div>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: "1rem", color: "var(--foreground)" }}>
+                  {currentUser?.username || "Admin"}
+                </p>
+                <p style={{ fontSize: "0.8125rem", color: "var(--foreground-muted)" }}>
+                  System Administrator
+                </p>
+              </div>
+            </div>
 
-  const handleReset = () => {
-    resetSettings();
-    toast.success("Settings reset to defaults");
-  };
-  return /* @__PURE__ */ jsxs("div", { className: "space-y-6", children: [
-    /* @__PURE__ */ jsxs("div", { children: [
-      /* @__PURE__ */ jsx("h2", { className: "text-2xl mb-2", children: "System Settings" }),
-      /* @__PURE__ */ jsx("p", { className: "text-gray-600", children: "Configure system-wide settings and preferences" })
-    ] }),
-    /* @__PURE__ */ jsxs(Card, { children: [
-      /* @__PURE__ */ jsxs(CardHeader, { children: [
-        /* @__PURE__ */ jsx(CardTitle, { children: "General Settings" }),
-        /* @__PURE__ */ jsx(CardDescription, { children: "Basic system configuration" })
-      ] }),
-      /* @__PURE__ */ jsxs(CardContent, { className: "space-y-4", children: [
-        /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsx(Label, { htmlFor: "systemName", children: "System Name" }),
-          /* @__PURE__ */ jsx(Input, { id: "systemName", value: settings.systemName, onChange: (e) => handleInputChange("systemName", e.target.value) })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsx(Label, { htmlFor: "institutionName", children: "Institution Name" }),
-          /* @__PURE__ */ jsx(Input, { id: "institutionName", value: settings.institutionName, onChange: (e) => handleInputChange("institutionName", e.target.value) })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsx(Label, { htmlFor: "contactEmail", children: "Contact Email" }),
-          /* @__PURE__ */ jsx(Input, { id: "contactEmail", type: "email", value: settings.contactEmail, onChange: (e) => handleInputChange("contactEmail", e.target.value) })
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxs(Card, { children: [
-      /* @__PURE__ */ jsxs(CardHeader, { children: [
-        /* @__PURE__ */ jsx(CardTitle, { children: "Application Settings" }),
-        /* @__PURE__ */ jsx(CardDescription, { children: "Configure application behavior and limits" })
-      ] }),
-      /* @__PURE__ */ jsxs(CardContent, { className: "space-y-6", children: [
-        /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-          /* @__PURE__ */ jsxs("div", { className: "space-y-0.5", children: [
-            /* @__PURE__ */ jsx(Label, { children: "Allow Student Registration" }),
-            /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-500", children: "Enable students to self-register" })
-          ] }),
-          /* @__PURE__ */ jsx(Switch, { checked: settings.allowStudentRegistration, onCheckedChange: (checked) => handleInputChange("allowStudentRegistration", checked) })
-        ] }),
-        /* @__PURE__ */ jsx(Separator, {}),
-        /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-          /* @__PURE__ */ jsxs("div", { className: "space-y-0.5", children: [
-            /* @__PURE__ */ jsx(Label, { children: "Allow Employer Registration" }),
-            /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-500", children: "Enable employers to self-register" })
-          ] }),
-          /* @__PURE__ */ jsx(Switch, { checked: settings.allowEmployerRegistration, onCheckedChange: (checked) => handleInputChange("allowEmployerRegistration", checked) })
-        ] }),
-        /* @__PURE__ */ jsx(Separator, {}),
-        /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-          /* @__PURE__ */ jsxs("div", { className: "space-y-0.5", children: [
-            /* @__PURE__ */ jsx(Label, { children: "Email Notifications" }),
-            /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-500", children: "Send email notifications for application updates" })
-          ] }),
-          /* @__PURE__ */ jsx(Switch, { checked: settings.emailNotifications, onCheckedChange: (checked) => handleInputChange("emailNotifications", checked) })
-        ] }),
-        /* @__PURE__ */ jsx(Separator, {}),
-        /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsx(Label, { htmlFor: "maxApplications", children: "Max Applications per Student" }),
-          /* @__PURE__ */ jsx(Input, { id: "maxApplications", type: "number", value: settings.maxApplications, onChange: (e) => handleInputChange("maxApplications", Number(e.target.value) || 0) })
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxs(Card, { children: [
-      /* @__PURE__ */ jsxs(CardHeader, { children: [
-        /* @__PURE__ */ jsx(CardTitle, { children: "Placement Cycle Settings" }),
-        /* @__PURE__ */ jsx(CardDescription, { children: "Configure current placement cycle" })
-      ] }),
-      /* @__PURE__ */ jsx(CardContent, { className: "space-y-4", children: /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
-        /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsx(Label, { htmlFor: "cycleYear", children: "Placement Year" }),
-          /* @__PURE__ */ jsx(Input, { id: "cycleYear", value: settings.cycleYear, onChange: (e) => handleInputChange("cycleYear", e.target.value) })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsx(Label, { htmlFor: "cycleStatus", children: "Cycle Status" }),
-          /* @__PURE__ */ jsx(Input, { id: "cycleStatus", value: settings.cycleStatus, onChange: (e) => handleInputChange("cycleStatus", e.target.value) })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsx(Label, { htmlFor: "cycleStart", children: "Start Date" }),
-          /* @__PURE__ */ jsx(Input, { id: "cycleStart", type: "date", value: settings.cycleStart, onChange: (e) => handleInputChange("cycleStart", e.target.value) })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsx(Label, { htmlFor: "cycleEnd", children: "End Date" }),
-          /* @__PURE__ */ jsx(Input, { id: "cycleEnd", type: "date", value: settings.cycleEnd, onChange: (e) => handleInputChange("cycleEnd", e.target.value) })
-        ] })
-      ] }) })
-    ] }),
-    /* @__PURE__ */ jsxs(Card, { children: [
-      /* @__PURE__ */ jsxs(CardHeader, { children: [
-        /* @__PURE__ */ jsx(CardTitle, { children: "Security Settings" }),
-        /* @__PURE__ */ jsx(CardDescription, { children: "System security and access control" })
-      ] }),
-      /* @__PURE__ */ jsxs(CardContent, { className: "space-y-6", children: [
-        /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-          /* @__PURE__ */ jsxs("div", { className: "space-y-0.5", children: [
-            /* @__PURE__ */ jsx(Label, { children: "Require Email Verification" }),
-            /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-500", children: "Users must verify email before access" })
-          ] }),
-          /* @__PURE__ */ jsx(Switch, { checked: settings.requireEmailVerification, onCheckedChange: (checked) => handleInputChange("requireEmailVerification", checked) })
-        ] }),
-        /* @__PURE__ */ jsx(Separator, {}),
-        /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-          /* @__PURE__ */ jsxs("div", { className: "space-y-0.5", children: [
-            /* @__PURE__ */ jsx(Label, { children: "Two-Factor Authentication" }),
-            /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-500", children: "Require 2FA for admin accounts" })
-          ] }),
-          /* @__PURE__ */ jsx(Switch, { checked: settings.twoFactorAuthForAdmin, onCheckedChange: (checked) => handleInputChange("twoFactorAuthForAdmin", checked) })
-        ] }),
-        /* @__PURE__ */ jsx(Separator, {}),
-        /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsx(Label, { htmlFor: "sessionTimeout", children: "Session Timeout (minutes)" }),
-          /* @__PURE__ */ jsx(Input, { id: "sessionTimeout", type: "number", value: settings.sessionTimeout, onChange: (e) => handleInputChange("sessionTimeout", Number(e.target.value) || 0) })
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxs("div", { className: "flex justify-end gap-4", children: [
-      /* @__PURE__ */ jsx(Button, { variant: "outline", onClick: handleReset, children: "Reset to Defaults" }),
-      /* @__PURE__ */ jsx(Button, { onClick: handleSave, children: "Save All Settings" })
-    ] })
-  ] });
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Mail style={{ width: 15, height: 15, color: "var(--foreground-muted)", flexShrink: 0 }} />
+                <span style={{ fontSize: "0.8125rem", color: "var(--foreground-muted)", minWidth: 60 }}>Email</span>
+                <span style={{ fontSize: "0.875rem", color: "var(--foreground)", fontWeight: 500 }}>
+                  {currentUser?.email || currentUser?.username || "—"}
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Shield style={{ width: 15, height: 15, color: "var(--foreground-muted)", flexShrink: 0 }} />
+                <span style={{ fontSize: "0.8125rem", color: "var(--foreground-muted)", minWidth: 60 }}>Role</span>
+                <span style={{
+                  fontSize: "0.75rem", fontWeight: 600, color: "var(--primary)",
+                  background: "var(--accent)", padding: "2px 10px", borderRadius: 999,
+                }}>
+                  Administrator
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* System Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Server style={{ width: 18, height: 18, color: "var(--primary)" }} />
+            System Info
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {[
+            ["Application", "Placement Management System"],
+            ["Backend", "http://localhost:2007"],
+            ["Version", "1.0.0"],
+          ].map(([key, val], i, arr) => (
+            <div key={key} style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "0.65rem 0",
+              borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none",
+            }}>
+              <span style={{ fontSize: "0.8125rem", color: "var(--foreground-muted)" }}>{key}</span>
+              <span style={{ fontSize: "0.875rem", color: "var(--foreground)", fontWeight: 500 }}>{val}</span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
-export {
-  SystemSettings
-};
+
+export { SystemSettings };

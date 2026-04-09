@@ -1,346 +1,178 @@
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { GraduationCap, Building2, Users, Shield, Eye, EyeOff, Check } from "lucide-react";
+import { GraduationCap, Building2, Eye, EyeOff } from "lucide-react";
 import { usePlacementData } from "../../context/PlacementDataContext";
+import { toast } from "sonner";
 
 function SignupPage() {
   const navigate = useNavigate();
-  const { signup } = usePlacementData();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState("student");
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    organization: "",
-    studentId: "",
-    department: "",
-    phone: "",
-  });
-  const [passwordStrength, setPasswordStrength] = useState(0);
+  const { studentRegister, employerRegister } = usePlacementData();
+  const [role, setRole] = useState("student");
+  const [loading, setLoading] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
-  const handlePasswordChange = (value) => {
-    setFormData({ ...formData, password: value });
-    let strength = 0;
-    if (value.length >= 8) strength++;
-    if (/[a-z]/.test(value) && /[A-Z]/.test(value)) strength++;
-    if (/\d/.test(value)) strength++;
-    if (/[^a-zA-Z0-9]/.test(value)) strength++;
-    setPasswordStrength(strength);
-  };
+  // Student fields: name, email, password, branch, resume, cgpa, year
+  const [sf, setSf] = useState({ name: "", email: "", password: "", confirmPassword: "", branch: "", resume: "", cgpa: "", year: "" });
+  // Employer fields: companyName, email, password
+  const [ef, setEf] = useState({ companyName: "", email: "", password: "", confirmPassword: "" });
 
-  const handleSubmit = async (e) => {
+  const s = (k) => (e) => setSf({ ...sf, [k]: e.target.value });
+  const em = (k) => (e) => setEf({ ...ef, [k]: e.target.value });
+
+  const handleStudentSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-    if (formData.password.length < 8) {
-      alert("Password must be at least 8 characters long!");
-      return;
-    }
-
-    const result = await signup({ role: selectedRole, formData });
-    if (!result.ok) return;
-
-    navigate("/login");
+    if (sf.password !== sf.confirmPassword) { toast.error("Passwords do not match"); return; }
+    setLoading(true);
+    const result = await studentRegister(sf);
+    setLoading(false);
+    if (result.ok) { toast.success("Registered! Please login."); navigate("/login"); }
+    else toast.error(result.message);
   };
 
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength <= 1) return "bg-red-500";
-    if (passwordStrength === 2) return "bg-orange-500";
-    if (passwordStrength === 3) return "bg-yellow-500";
-    return "bg-green-500";
-  };
-
-  const getPasswordStrengthText = () => {
-    if (passwordStrength <= 1) return "Weak";
-    if (passwordStrength === 2) return "Fair";
-    if (passwordStrength === 3) return "Good";
-    return "Strong";
+  const handleEmployerSubmit = async (e) => {
+    e.preventDefault();
+    if (ef.password !== ef.confirmPassword) { toast.error("Passwords do not match"); return; }
+    setLoading(true);
+    const result = await employerRegister(ef);
+    setLoading(false);
+    if (result.ok) { toast.success("Registered! Please login."); navigate("/login"); }
+    else toast.error(result.message);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="w-full max-w-4xl">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="w-full max-w-xl">
         <div className="text-center mb-8">
-          <Link to="/login" className="inline-flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
-            <GraduationCap className="w-10 h-10 text-blue-600" />
-            <span className="text-2xl font-semibold">PlacementHub</span>
-          </Link>
-          <h1 className="text-4xl mb-2">Create Your Account</h1>
-          <p className="text-gray-600">Join our placement management system today</p>
+          <div className="inline-flex items-center gap-2 mb-3">
+            <GraduationCap className="w-9 h-9 text-blue-600" />
+            <span className="text-2xl font-semibold text-gray-900">PlacementHub</span>
+          </div>
+          <p className="text-gray-500">Create your account</p>
         </div>
 
-        <Card className="shadow-xl">
+        <Card>
           <CardHeader>
             <CardTitle>Sign Up</CardTitle>
-            <CardDescription>Choose your role and fill in your details to get started</CardDescription>
+            <CardDescription>Students and employers can register here</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-6">
-                <Label className="mb-3 block">I am a:</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRole("student")}
-                    className={`p-4 border-2 rounded-lg transition-all hover:shadow-md ${selectedRole === "student" ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-gray-300"}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-blue-500 p-2 rounded-lg text-white">
-                        <GraduationCap className="w-5 h-5" />
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium">Student</div>
-                        <p className="text-sm text-gray-600">Looking for placements</p>
-                      </div>
-                      {selectedRole === "student" && <Check className="w-5 h-5 text-blue-600 ml-auto" />}
-                    </div>
-                  </button>
+            {/* Role toggle */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <button
+                type="button"
+                onClick={() => setRole("student")}
+                className={`flex items-center gap-2 p-3 border-2 rounded-lg transition-all ${role === "student" ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-gray-300"}`}
+              >
+                <GraduationCap className="w-5 h-5 text-blue-600" />
+                <span className="font-medium text-sm">Student</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("employer")}
+                className={`flex items-center gap-2 p-3 border-2 rounded-lg transition-all ${role === "employer" ? "border-green-600 bg-green-50" : "border-gray-200 hover:border-gray-300"}`}
+              >
+                <Building2 className="w-5 h-5 text-green-600" />
+                <span className="font-medium text-sm">Employer</span>
+              </button>
+            </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRole("employer")}
-                    className={`p-4 border-2 rounded-lg transition-all hover:shadow-md ${selectedRole === "employer" ? "border-green-600 bg-green-50" : "border-gray-200 hover:border-gray-300"}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-green-500 p-2 rounded-lg text-white">
-                        <Building2 className="w-5 h-5" />
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium">Employer</div>
-                        <p className="text-sm text-gray-600">Hiring candidates</p>
-                      </div>
-                      {selectedRole === "employer" && <Check className="w-5 h-5 text-green-600 ml-auto" />}
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRole("placement-officer")}
-                    className={`p-4 border-2 rounded-lg transition-all hover:shadow-md ${selectedRole === "placement-officer" ? "border-purple-600 bg-purple-50" : "border-gray-200 hover:border-gray-300"}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-purple-500 p-2 rounded-lg text-white">
-                        <Users className="w-5 h-5" />
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium">Placement Officer</div>
-                        <p className="text-sm text-gray-600">Track placements</p>
-                      </div>
-                      {selectedRole === "placement-officer" && <Check className="w-5 h-5 text-purple-600 ml-auto" />}
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRole("admin")}
-                    className={`p-4 border-2 rounded-lg transition-all hover:shadow-md ${selectedRole === "admin" ? "border-red-600 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-red-500 p-2 rounded-lg text-white">
-                        <Shield className="w-5 h-5" />
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium">Admin</div>
-                        <p className="text-sm text-gray-600">Manage system</p>
-                      </div>
-                      {selectedRole === "admin" && <Check className="w-5 h-5 text-red-600 ml-auto" />}
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="fullName">Full Name *</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Enter your full name"
-                    required
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder={selectedRole === "student" ? "your.email@university.edu" : "your.email@company.com"}
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
-
-                {selectedRole === "student" && (
-                  <Fragment>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="studentId">Student ID *</Label>
-                        <Input
-                          id="studentId"
-                          type="text"
-                          placeholder="e.g., STU2024001"
-                          required
-                          value={formData.studentId}
-                          onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="department">Department *</Label>
-                        <Input
-                          id="department"
-                          type="text"
-                          placeholder="e.g., Computer Science"
-                          required
-                          value={formData.department}
-                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </Fragment>
-                )}
-
-                {selectedRole === "employer" && (
-                  <div>
-                    <Label htmlFor="organization">Organization Name *</Label>
-                    <Input
-                      id="organization"
-                      type="text"
-                      placeholder="Enter your company name"
-                      required
-                      value={formData.organization}
-                      onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                    />
+            {/* Student form */}
+            {role === "student" && (
+              <form onSubmit={handleStudentSubmit} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Full Name *</Label>
+                    <Input placeholder="e.g. Rahul Sharma" required value={sf.name} onChange={s("name")} />
                   </div>
-                )}
-
-                {(selectedRole === "placement-officer" || selectedRole === "admin") && (
-                  <div>
-                    <Label htmlFor="organization">Institution Name *</Label>
-                    <Input
-                      id="organization"
-                      type="text"
-                      placeholder="Enter your institution name"
-                      required
-                      value={formData.organization}
-                      onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                    />
+                  <div className="space-y-1">
+                    <Label>Email *</Label>
+                    <Input type="email" placeholder="you@email.com" required value={sf.email} onChange={s("email")} />
                   </div>
-                )}
-
-                <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+1 (555) 000-0000"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="password">Password *</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Create a strong password"
-                      required
-                      value={formData.password}
-                      onChange={(e) => handlePasswordChange(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                  <div className="space-y-1">
+                    <Label>Branch *</Label>
+                    <Input placeholder="e.g. Computer Science" required value={sf.branch} onChange={s("branch")} />
                   </div>
-                  {formData.password && (
-                    <div className="mt-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all ${getPasswordStrengthColor()}`}
-                            style={{ width: `${(passwordStrength / 4) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-xs font-medium">{getPasswordStrengthText()}</span>
-                      </div>
-                      <p className="text-xs text-gray-500">Use 8+ characters with a mix of letters, numbers & symbols</p>
+                  <div className="space-y-1">
+                    <Label>Year *</Label>
+                    <Input type="number" min="1" max="5" placeholder="e.g. 2" required value={sf.year} onChange={s("year")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>CGPA *</Label>
+                    <Input type="number" step="0.01" min="0" max="10" placeholder="e.g. 8.5" required value={sf.cgpa} onChange={s("cgpa")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Resume filename *</Label>
+                    <Input placeholder="e.g. resume.pdf" required value={sf.resume} onChange={s("resume")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Password *</Label>
+                    <div className="relative">
+                      <Input type={showPw ? "text" : "password"} placeholder="Create password" required value={sf.password} onChange={s("password")} />
+                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Re-enter your password"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
                   </div>
-                  {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                    <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
-                  )}
+                  <div className="space-y-1">
+                    <Label>Confirm Password *</Label>
+                    <Input type="password" placeholder="Re-enter password" required value={sf.confirmPassword} onChange={s("confirmPassword")} />
+                    {sf.confirmPassword && sf.password !== sf.confirmPassword && (
+                      <p className="text-xs text-red-500">Passwords do not match</p>
+                    )}
+                  </div>
                 </div>
+                <Button type="submit" className="w-full mt-2" disabled={loading}>
+                  {loading ? "Registering..." : "Create Student Account"}
+                </Button>
+              </form>
+            )}
 
-                <div className="flex items-start gap-2">
-                  <input type="checkbox" id="terms" required className="mt-1" />
-                  <Label htmlFor="terms" className="text-sm font-normal cursor-pointer">
-                    I agree to the{" "}
-                    <a href="#" className="text-blue-600 hover:underline">Terms and Conditions</a>{" "}
-                    and{" "}
-                    <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
-                  </Label>
+            {/* Employer form */}
+            {role === "employer" && (
+              <form onSubmit={handleEmployerSubmit} className="space-y-3">
+                <div className="space-y-1">
+                  <Label>Company Name *</Label>
+                  <Input placeholder="e.g. TechCorp Solutions" required value={ef.companyName} onChange={em("companyName")} />
                 </div>
-              </div>
-
-              <Button type="submit" className="w-full mt-6">Create Account</Button>
-            </form>
+                <div className="space-y-1">
+                  <Label>Email *</Label>
+                  <Input type="email" placeholder="hr@company.com" required value={ef.email} onChange={em("email")} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Password *</Label>
+                    <div className="relative">
+                      <Input type={showPw ? "text" : "password"} placeholder="Create password" required value={ef.password} onChange={em("password")} />
+                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Confirm Password *</Label>
+                    <Input type="password" placeholder="Re-enter password" required value={ef.confirmPassword} onChange={em("confirmPassword")} />
+                    {ef.confirmPassword && ef.password !== ef.confirmPassword && (
+                      <p className="text-xs text-red-500">Passwords do not match</p>
+                    )}
+                  </div>
+                </div>
+                <Button type="submit" className="w-full mt-2" disabled={loading}>
+                  {loading ? "Registering..." : "Create Employer Account"}
+                </Button>
+              </form>
+            )}
           </CardContent>
-          <CardFooter className="flex justify-center border-t pt-6">
-            <p className="text-sm text-gray-600">
+          <CardFooter className="justify-center border-t pt-4">
+            <p className="text-sm text-gray-500">
               Already have an account?{" "}
               <Link to="/login" className="text-blue-600 hover:underline font-medium">Sign in</Link>
             </p>
           </CardFooter>
         </Card>
-
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>
-            Need help? Contact{" "}
-            <a href="mailto:support@placementhub.edu" className="text-blue-600 hover:underline">
-              support@placementhub.edu
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   );
