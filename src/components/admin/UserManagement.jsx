@@ -15,7 +15,7 @@ function UserManagement() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", username: "", institutename: "", contact: "" });
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
@@ -33,7 +33,7 @@ function UserManagement() {
 
   const handleAddOfficer = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.password) {
+    if (!form.name.trim() || !form.email.trim() || !form.password || !form.username.trim() || !form.institutename.trim() || !form.contact.trim()) {
       toast.error("All fields are required");
       return;
     }
@@ -42,7 +42,7 @@ function UserManagement() {
     setLoading(false);
     if (result.ok) {
       toast.success(result.message || "Officer added successfully!");
-      setForm({ name: "", email: "", password: "" });
+      setForm({ name: "", email: "", password: "", username: "", institutename: "", contact: "" });
       setShowForm(false);
       setTab("officers");
     } else {
@@ -87,7 +87,7 @@ function UserManagement() {
               <CardTitle>Add Placement Officer</CardTitle>
               <button
                 type="button"
-                onClick={() => { setShowForm(false); setForm({ name: "", email: "", password: "" }); }}
+                onClick={() => { setShowForm(false); setForm({ name: "", email: "", password: "", username: "", institutename: "", contact: "" }); }}
                 style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#64748b", boxShadow: "none" }}
               >
                 <X style={{ width: 18, height: 18 }} />
@@ -100,42 +100,33 @@ function UserManagement() {
               <div className="space-y-3">
                 <div className="space-y-1">
                   <Label htmlFor="officer-name">Full Name *</Label>
-                  <Input
-                    id="officer-name"
-                    type="text"
-                    required
-                    placeholder="e.g. Dr. Priya Mehta"
-                    value={form.name}
-                    onChange={set("name")}
-                  />
+                  <Input id="officer-name" type="text" required placeholder="e.g. Dr. Priya Mehta" value={form.name} onChange={set("name")} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="officer-username">Username *</Label>
+                  <Input id="officer-username" type="text" required placeholder="e.g. priya.mehta" value={form.username} onChange={set("username")} />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="officer-email">Email *</Label>
-                  <Input
-                    id="officer-email"
-                    type="email"
-                    required
-                    placeholder="officer@university.edu"
-                    value={form.email}
-                    onChange={set("email")}
-                  />
+                  <Input id="officer-email" type="email" required placeholder="officer@university.edu" value={form.email} onChange={set("email")} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="officer-institute">Institute Name *</Label>
+                  <Input id="officer-institute" type="text" required placeholder="e.g. ABC University" value={form.institutename} onChange={set("institutename")} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="officer-contact">Contact *</Label>
+                  <Input id="officer-contact" type="text" required placeholder="e.g. 9876543210" value={form.contact} onChange={set("contact")} />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="officer-password">Password *</Label>
-                  <Input
-                    id="officer-password"
-                    type="password"
-                    required
-                    placeholder="Set a password"
-                    value={form.password}
-                    onChange={set("password")}
-                  />
+                  <Input id="officer-password" type="password" required placeholder="Set a password" value={form.password} onChange={set("password")} />
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-end" }}>
                 <button
                   type="button"
-                  onClick={() => { setShowForm(false); setForm({ name: "", email: "", password: "" }); }}
+                  onClick={() => { setShowForm(false); setForm({ name: "", email: "", password: "", username: "", institutename: "", contact: "" }); }}
                   style={{
                     background: "#fff",
                     color: "var(--foreground)",

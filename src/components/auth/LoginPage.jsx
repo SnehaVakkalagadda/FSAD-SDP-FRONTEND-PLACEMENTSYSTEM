@@ -1,20 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { GraduationCap, Eye, EyeOff } from "lucide-react";
 import { usePlacementData } from "../../context/PlacementDataContext";
 import { toast } from "sonner";
-
-const ROLES = [
-  { value: "student", label: "Student" },
-  { value: "employer", label: "Employer" },
-  { value: "placement-officer", label: "Placement Officer" },
-  { value: "admin", label: "Admin" },
-];
 
 const ROLE_ROUTES = {
   student: "/student",
@@ -22,6 +10,57 @@ const ROLE_ROUTES = {
   "placement-officer": "/officer",
   admin: "/admin",
 };
+
+const cardStyle = {
+  background: "#fff",
+  border: "1px solid #e2e8f0",
+  borderRadius: 14,
+  boxShadow: "0 4px 24px rgba(15,23,42,0.08)",
+  padding: "2rem",
+  width: "100%",
+  maxWidth: 420,
+};
+
+const labelStyle = {
+  display: "block",
+  fontSize: "0.8125rem",
+  fontWeight: 500,
+  color: "#1e293b",
+  marginBottom: 6,
+};
+
+const inputStyle = {
+  width: "100%",
+  padding: "0.55rem 0.75rem",
+  fontSize: "0.9rem",
+  border: "1.5px solid #e2e8f0",
+  borderRadius: 10,
+  outline: "none",
+  color: "#1e293b",
+  background: "#fff",
+  boxSizing: "border-box",
+  transition: "border-color 0.15s",
+};
+
+const selectStyle = {
+  ...inputStyle,
+  cursor: "pointer",
+  appearance: "auto",
+};
+
+const btnStyle = (disabled) => ({
+  width: "100%",
+  padding: "0.65rem",
+  background: disabled ? "#93c5fd" : "#2563eb",
+  color: "#fff",
+  border: "none",
+  borderRadius: 10,
+  fontWeight: 600,
+  fontSize: "0.9375rem",
+  cursor: disabled ? "not-allowed" : "pointer",
+  marginTop: 8,
+  transition: "background 0.15s",
+});
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -34,7 +73,7 @@ function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!role) { toast.error("Select a role"); return; }
+    if (!role) { toast.error("Please select a role"); return; }
     setLoading(true);
     const result = await login({ role, email, password });
     setLoading(false);
@@ -46,80 +85,98 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <GraduationCap className="w-9 h-9 text-blue-600" />
-            <span className="text-2xl font-semibold text-gray-900">PlacementHub</span>
+    <div style={{
+      minHeight: "100vh", display: "flex", alignItems: "center",
+      justifyContent: "center", padding: "1rem",
+      background: "linear-gradient(135deg, #eff6ff 0%, #fff 50%, #eef2ff 100%)",
+    }}>
+      <div style={{ width: "100%", maxWidth: 420 }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <GraduationCap style={{ width: 36, height: 36, color: "#2563eb" }} />
+            <span style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1e293b" }}>PlacementHub</span>
           </div>
-          <p className="text-gray-500">Sign in to your account</p>
+          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>Sign in to your account</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>Choose your role and enter credentials</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <Label>Role</Label>
-                <Select value={role} onValueChange={(v) => { setRole(v); setEmail(""); setPassword(""); }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLES.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <div style={cardStyle}>
+          <h2 style={{ fontSize: "1.125rem", fontWeight: 600, color: "#1e293b", marginBottom: 4 }}>Sign In</h2>
+          <p style={{ fontSize: "0.8rem", color: "#64748b", marginBottom: "1.5rem" }}>Choose your role and enter credentials</p>
 
-              <div className="space-y-1">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  placeholder="your@email.com"
+          <form onSubmit={handleSubmit}>
+            {/* Role */}
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={labelStyle}>Role</label>
+              <select
+                value={role}
+                onChange={(e) => { setRole(e.target.value); setEmail(""); setPassword(""); }}
+                style={selectStyle}
+                required
+              >
+                <option value="">Select your role</option>
+                <option value="student">Student</option>
+                <option value="employer">Employer</option>
+                <option value="placement-officer">Placement Officer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            {/* Email */}
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={labelStyle}>Email</label>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Password */}
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={labelStyle}>Password</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPw ? "text" : "password"}
+                  placeholder="Enter password"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{ ...inputStyle, paddingRight: "2.5rem" }}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  style={{
+                    position: "absolute", right: 10, top: "50%",
+                    transform: "translateY(-50%)", background: "none",
+                    border: "none", cursor: "pointer", padding: 0,
+                    color: "#94a3b8", boxShadow: "none",
+                    display: "flex", alignItems: "center",
+                  }}
+                >
+                  {showPw ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
+                </button>
               </div>
+            </div>
 
-              <div className="space-y-1">
-                <Label>Password</Label>
-                <div className="relative">
-                  <Input
-                    type={showPw ? "text" : "password"}
-                    placeholder="Enter password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw(!showPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+            <button type="submit" disabled={!role || loading} style={btnStyle(!role || loading)}>
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
 
-              <Button type="submit" className="w-full" disabled={!role || loading}>
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="justify-center border-t pt-4">
-            <p className="text-sm text-gray-500">
+          <div style={{ textAlign: "center", marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid #e2e8f0" }}>
+            <p style={{ fontSize: "0.875rem", color: "#64748b" }}>
               New student or employer?{" "}
-              <Link to="/signup" className="text-blue-600 hover:underline font-medium">Sign up</Link>
+              <Link to="/signup" style={{ color: "#2563eb", fontWeight: 600, textDecoration: "none" }}>
+                Sign up
+              </Link>
             </p>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

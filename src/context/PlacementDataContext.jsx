@@ -33,7 +33,7 @@ export function PlacementDataProvider({ children }) {
   async function loadStudentJobs() {
     try {
       const res = await API.get("/student/viewjobs");
-      setJobs(res.data || []);
+      setJobs(Array.isArray(res.data) ? res.data : []);
     } catch { setJobs([]); }
   }
 
@@ -55,7 +55,7 @@ export function PlacementDataProvider({ children }) {
     try {
       const [appsRes, jobsRes] = await Promise.allSettled([
         API.get("/officer/applications"),
-        API.get("/student/viewjobs"),
+        API.get("/officer/viewjobs"),
       ]);
       setApplications(appsRes.status === "fulfilled" && Array.isArray(appsRes.value.data) ? appsRes.value.data : []);
       setJobs(jobsRes.status === "fulfilled" && Array.isArray(jobsRes.value.data) ? jobsRes.value.data : []);
@@ -84,11 +84,10 @@ export function PlacementDataProvider({ children }) {
     if (session.role === "employer") loadEmployerJobs(session.user.id);
     if (session.role === "placement-officer") loadOfficerApplications();
     if (session.role === "admin") loadAdminData();
-  }, [session?.role, session?.user?.id, session?.user?.username]); // eslint-disable-line
+  }, [session?.role, session?.user?.id]); // eslint-disable-line
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
-  // Frontend role → backend AuthRequestDTO role string
   const ROLE_MAP = {
     student: "STUDENT",
     employer: "EMPLOYER",
@@ -96,29 +95,33 @@ export function PlacementDataProvider({ children }) {
     admin: "ADMIN",
   };
 
-  // POST /auth/login — body: { login, password, role }
-  // Response: { token, role, user: { ...entity } }
+  // Backend must return: { token: "...", user: { id, name, email, ... } }
   const login = async ({ role, email, password }) => {
     try {
       const res = await API.post("/auth/login", {
         login: email,
-        password: password,
+        password,
         role: ROLE_MAP[role],
       });
-      const { token, user } = res.data;
+
+      const token = res.data?.token;
+      const user = res.data?.user;
+
+      if (!token) return { ok: false, message: "No token received from server" };
+      if (!user || typeof user !== "object") return { ok: false, message: "No user data received from server" };
+
       persist(user, role, token);
       return { ok: true };
     } catch (e) {
       const status = e.response?.status;
       const data = e.response?.data;
-      const msg = status === 401 || status === 404
-        ? "Invalid credentials"
-        : typeof data === "string" ? data : "Server error. Try again.";
-      return { ok: false, message: msg };
+      if (status === 401 || status === 403) return { ok: false, message: "Invalid credentials" };
+      if (status === 404) return { ok: false, message: "User not found" };
+      if (!e.response) return { ok: false, message: "Cannot connect to server. Make sure backend is running on port 2007." };
+      return { ok: false, message: typeof data === "string" ? data : "Login failed. Try again." };
     }
   };
 
-  // Student register — public endpoint, no token needed
   const studentRegister = async (data) => {
     try {
       await API.post("/student/register", {
@@ -134,27 +137,28 @@ export function PlacementDataProvider({ children }) {
       });
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Registration failed";
-      return { ok: false, message: msg };
+      const data = e.response?.data;
+      if (!e.response) return { ok: false, message: "Cannot connect to server. Make sure backend is running on port 2007." };
+      return { ok: false, message: typeof data === "string" ? data : "Registration failed" };
     }
   };
 
-  // Employer register — public endpoint, no token needed
   const employerRegister = async (data) => {
     try {
       await API.post("/employer/register", {
         companyName: data.companyName,
         email: data.email,
         password: data.password,
-        username: "",
-        contact: "",
-        companyMail: "",
-        location: "",
+        username: data.username || "",
+        contact: data.contact || "",
+        companyMail: data.companyMail || "",
+        location: data.location || "",
       });
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Registration failed";
-      return { ok: false, message: msg };
+      const d = e.response?.data;
+      if (!e.response) return { ok: false, message: "Cannot connect to server. Make sure backend is running on port 2007." };
+      return { ok: false, message: typeof d === "string" ? d : "Registration failed" };
     }
   };
 
@@ -187,25 +191,19 @@ export function PlacementDataProvider({ children }) {
       persist({ ...currentUser, ...data }, currentRole, session?.token);
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Update failed";
-      return { ok: false, message: msg };
+      return { ok: false, message: typeof e.response?.data === "string" ? e.response.data : "Update failed" };
     }
   };
 
-  // POST /student/applyjob — body: ApplicationDTO { studentId, jobId }
   const applyJob = async (jobId) => {
     try {
       const studentId = Number(currentUser.id);
-      await API.post("/student/applyjob", {
-        studentId: studentId,
-        jobId: Number(jobId),
-      });
+      await API.post("/student/applyjob", { studentId, jobId: Number(jobId) });
       const res = await API.get(`/student/viewapplications/${studentId}`);
       setApplications(Array.isArray(res.data) ? res.data : []);
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Already applied or apply failed";
-      return { ok: false, message: msg };
+      return { ok: false, message: typeof e.response?.data === "string" ? e.response.data : "Already applied or apply failed" };
     }
   };
 
@@ -222,12 +220,10 @@ export function PlacementDataProvider({ children }) {
       persist({ ...currentUser, ...data }, currentRole, session?.token);
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Update failed";
-      return { ok: false, message: msg };
+      return { ok: false, message: typeof e.response?.data === "string" ? e.response.data : "Update failed" };
     }
   };
 
-  // POST /employer/postjob — body: JobDTO { title, description, salary, employerId }
   const postJob = async (data) => {
     try {
       await API.post("/employer/postjob", {
@@ -239,62 +235,52 @@ export function PlacementDataProvider({ children }) {
       await loadEmployerJobs(currentUser.id);
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Post job failed";
-      return { ok: false, message: msg };
+      return { ok: false, message: typeof e.response?.data === "string" ? e.response.data : "Post job failed" };
     }
   };
 
-  // GET /employer/applicationsperjob/{jobId}
   const loadApplicationsForJob = async (jobId) => {
     try {
       const res = await API.get(`/employer/applicationsperjob/${jobId}`);
       const incoming = Array.isArray(res.data) ? res.data : [];
-      setApplications((prev) => {
-        const others = prev.filter((a) => a.jobId !== jobId);
-        return [...others, ...incoming];
-      });
+      setApplications((prev) => [...prev.filter((a) => a.jobId !== jobId), ...incoming]);
       return incoming;
     } catch { return []; }
   };
 
   // ── Officer ops ───────────────────────────────────────────────────────────
 
-  // PUT /officer/updatestatus?applicationId=&status=&studentId=
   const updateApplicationStatus = async (applicationId, status, studentId) => {
     try {
       await API.put(`/officer/updatestatus?applicationId=${applicationId}&status=${encodeURIComponent(status)}&studentId=${studentId}`);
-      setApplications((prev) =>
-        prev.map((a) => a.id === applicationId ? { ...a, status } : a)
-      );
+      setApplications((prev) => prev.map((a) => a.id === applicationId ? { ...a, status } : a));
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Update failed";
-      return { ok: false, message: msg };
+      return { ok: false, message: typeof e.response?.data === "string" ? e.response.data : "Update failed" };
     }
   };
 
   // ── Admin ops ─────────────────────────────────────────────────────────────
 
-  // POST /admin/addofficer — body: PlacementOfficer { name, email, password }
   const addOfficer = async (data) => {
     try {
       const res = await API.post("/admin/addofficer", {
         name: data.name.trim(),
         email: data.email.trim(),
         password: data.password,
+        username: data.username.trim(),
+        institutename: data.institutename.trim(),
+        contact: data.contact.trim(),
       });
       try {
         const oRes = await API.get("/admin/displayofficers");
         if (Array.isArray(oRes.data)) setOfficers(oRes.data);
-      } catch { /* 404 — no officers yet */ }
+      } catch { /* no officers yet */ }
       return { ok: true, message: typeof res.data === "string" ? res.data : "Officer added successfully" };
     } catch (e) {
       const status = e.response?.status;
-      const data = e.response?.data;
-      const msg = typeof data === "string" ? data
-        : status === 500 ? "Server error — email may already exist"
-        : "Add officer failed";
-      return { ok: false, message: msg };
+      const d = e.response?.data;
+      return { ok: false, message: typeof d === "string" ? d : status === 500 ? "Server error — email may already exist" : "Add officer failed" };
     }
   };
 
@@ -304,8 +290,7 @@ export function PlacementDataProvider({ children }) {
       setStudents((prev) => prev.filter((s) => s.id !== id));
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Delete failed";
-      return { ok: false, message: msg };
+      return { ok: false, message: typeof e.response?.data === "string" ? e.response.data : "Delete failed" };
     }
   };
 
@@ -315,8 +300,7 @@ export function PlacementDataProvider({ children }) {
       setEmployers((prev) => prev.filter((e) => e.id !== id));
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Delete failed";
-      return { ok: false, message: msg };
+      return { ok: false, message: typeof e.response?.data === "string" ? e.response.data : "Delete failed" };
     }
   };
 
@@ -326,8 +310,7 @@ export function PlacementDataProvider({ children }) {
       setOfficers((prev) => prev.filter((o) => o.id !== id));
       return { ok: true };
     } catch (e) {
-      const msg = typeof e.response?.data === "string" ? e.response.data : "Delete failed";
-      return { ok: false, message: msg };
+      return { ok: false, message: typeof e.response?.data === "string" ? e.response.data : "Delete failed" };
     }
   };
 
