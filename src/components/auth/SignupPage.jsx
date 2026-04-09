@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "../ui/card";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { GraduationCap, Building2, Eye, EyeOff } from "lucide-react";
@@ -15,10 +14,18 @@ function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
-  // Student fields: name, email, password, branch, resume, cgpa, year
-  const [sf, setSf] = useState({ name: "", email: "", password: "", confirmPassword: "", branch: "", resume: "", cgpa: "", year: "" });
+  // Student fields: name, email, password, branch, cgpa, year, username, collegeName, contact
+  const [sf, setSf] = useState({
+    name: "", email: "", password: "", confirmPassword: "",
+    branch: "", cgpa: "", year: "",
+    username: "", collegeName: "", contact: "",
+  });
+
   // Employer fields: companyName, email, password
-  const [ef, setEf] = useState({ companyName: "", email: "", password: "", confirmPassword: "" });
+  const [ef, setEf] = useState({
+    companyName: "", email: "", password: "", confirmPassword: "",
+    username: "", contact: "", companyMail: "", location: "",
+  });
 
   const s = (k) => (e) => setSf({ ...sf, [k]: e.target.value });
   const em = (k) => (e) => setEf({ ...ef, [k]: e.target.value });
@@ -43,6 +50,15 @@ function SignupPage() {
     else toast.error(result.message);
   };
 
+  const btnStyle = (active, color) => ({
+    display: "flex", alignItems: "center", gap: 10,
+    padding: "12px 16px", borderRadius: 10, cursor: "pointer",
+    border: `2px solid ${active ? color : "#e2e8f0"}`,
+    background: active ? (color === "#2563eb" ? "#eff6ff" : "#f0fdf4") : "#fff",
+    width: "100%", textAlign: "left",
+    boxShadow: "none", color: "var(--foreground)",
+  });
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="w-full max-w-xl">
@@ -62,21 +78,13 @@ function SignupPage() {
           <CardContent>
             {/* Role toggle */}
             <div className="grid grid-cols-2 gap-3 mb-6">
-              <button
-                type="button"
-                onClick={() => setRole("student")}
-                className={`flex items-center gap-2 p-3 border-2 rounded-lg transition-all ${role === "student" ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-gray-300"}`}
-              >
-                <GraduationCap className="w-5 h-5 text-blue-600" />
-                <span className="font-medium text-sm">Student</span>
+              <button type="button" onClick={() => setRole("student")} style={btnStyle(role === "student", "#2563eb")}>
+                <GraduationCap style={{ width: 20, height: 20, color: "#2563eb", flexShrink: 0 }} />
+                <span style={{ fontWeight: 500, fontSize: 14 }}>Student</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setRole("employer")}
-                className={`flex items-center gap-2 p-3 border-2 rounded-lg transition-all ${role === "employer" ? "border-green-600 bg-green-50" : "border-gray-200 hover:border-gray-300"}`}
-              >
-                <Building2 className="w-5 h-5 text-green-600" />
-                <span className="font-medium text-sm">Employer</span>
+              <button type="button" onClick={() => setRole("employer")} style={btnStyle(role === "employer", "#16a34a")}>
+                <Building2 style={{ width: 20, height: 20, color: "#16a34a", flexShrink: 0 }} />
+                <span style={{ fontWeight: 500, fontSize: 14 }}>Employer</span>
               </button>
             </div>
 
@@ -89,8 +97,20 @@ function SignupPage() {
                     <Input placeholder="e.g. Rahul Sharma" required value={sf.name} onChange={s("name")} />
                   </div>
                   <div className="space-y-1">
+                    <Label>Username *</Label>
+                    <Input placeholder="e.g. rahul123" required value={sf.username} onChange={s("username")} />
+                  </div>
+                  <div className="space-y-1">
                     <Label>Email *</Label>
                     <Input type="email" placeholder="you@email.com" required value={sf.email} onChange={s("email")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Contact *</Label>
+                    <Input placeholder="e.g. 9876543210" required value={sf.contact} onChange={s("contact")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>College Name *</Label>
+                    <Input placeholder="e.g. KLEF University" required value={sf.collegeName} onChange={s("collegeName")} />
                   </div>
                   <div className="space-y-1">
                     <Label>Branch *</Label>
@@ -105,15 +125,11 @@ function SignupPage() {
                     <Input type="number" step="0.01" min="0" max="10" placeholder="e.g. 8.5" required value={sf.cgpa} onChange={s("cgpa")} />
                   </div>
                   <div className="space-y-1">
-                    <Label>Resume filename *</Label>
-                    <Input placeholder="e.g. resume.pdf" required value={sf.resume} onChange={s("resume")} />
-                  </div>
-                  <div className="space-y-1">
                     <Label>Password *</Label>
                     <div className="relative">
                       <Input type={showPw ? "text" : "password"} placeholder="Create password" required value={sf.password} onChange={s("password")} />
-                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94a3b8", boxShadow: "none", padding: 0 }}>
+                        {showPw ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
                       </button>
                     </div>
                   </div>
@@ -125,30 +141,30 @@ function SignupPage() {
                     )}
                   </div>
                 </div>
-                <Button type="submit" className="w-full mt-2" disabled={loading}>
+                <button type="submit" disabled={loading} style={{ width: "100%", background: loading ? "#93c5fd" : "var(--primary)", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", fontSize: 14, marginTop: 4 }}>
                   {loading ? "Registering..." : "Create Student Account"}
-                </Button>
+                </button>
               </form>
             )}
 
             {/* Employer form */}
             {role === "employer" && (
               <form onSubmit={handleEmployerSubmit} className="space-y-3">
-                <div className="space-y-1">
-                  <Label>Company Name *</Label>
-                  <Input placeholder="e.g. TechCorp Solutions" required value={ef.companyName} onChange={em("companyName")} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Email *</Label>
-                  <Input type="email" placeholder="hr@company.com" required value={ef.email} onChange={em("email")} />
-                </div>
                 <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Company Name *</Label>
+                    <Input placeholder="e.g. TechCorp Solutions" required value={ef.companyName} onChange={em("companyName")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Email *</Label>
+                    <Input type="email" placeholder="hr@company.com" required value={ef.email} onChange={em("email")} />
+                  </div>
                   <div className="space-y-1">
                     <Label>Password *</Label>
                     <div className="relative">
                       <Input type={showPw ? "text" : "password"} placeholder="Create password" required value={ef.password} onChange={em("password")} />
-                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94a3b8", boxShadow: "none", padding: 0 }}>
+                        {showPw ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
                       </button>
                     </div>
                   </div>
@@ -160,9 +176,9 @@ function SignupPage() {
                     )}
                   </div>
                 </div>
-                <Button type="submit" className="w-full mt-2" disabled={loading}>
+                <button type="submit" disabled={loading} style={{ width: "100%", background: loading ? "#93c5fd" : "var(--primary)", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", fontSize: 14, marginTop: 4 }}>
                   {loading ? "Registering..." : "Create Employer Account"}
-                </Button>
+                </button>
               </form>
             )}
           </CardContent>

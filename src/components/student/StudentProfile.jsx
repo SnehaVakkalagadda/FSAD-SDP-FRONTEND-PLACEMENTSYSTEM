@@ -27,9 +27,11 @@ function StudentProfile() {
     email: currentUser?.email || "",
     password: "",
     branch: currentUser?.branch || "",
-    resume: currentUser?.resume || "",
     cgpa: currentUser?.cgpa || "",
     year: currentUser?.year || "",
+    username: currentUser?.username || "",
+    collegeName: currentUser?.collegeName || "",
+    contact: currentUser?.contact || "",
   });
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -40,9 +42,11 @@ function StudentProfile() {
       email: currentUser?.email || "",
       password: "",
       branch: currentUser?.branch || "",
-      resume: currentUser?.resume || "",
       cgpa: currentUser?.cgpa || "",
       year: currentUser?.year || "",
+      username: currentUser?.username || "",
+      collegeName: currentUser?.collegeName || "",
+      contact: currentUser?.contact || "",
     });
     setEditing(true);
   };
@@ -62,11 +66,13 @@ function StudentProfile() {
 
   const fields = [
     { label: "Full Name", value: currentUser?.name },
+    { label: "Username", value: currentUser?.username },
     { label: "Email", value: currentUser?.email },
+    { label: "Contact", value: currentUser?.contact },
+    { label: "College", value: currentUser?.collegeName },
     { label: "Branch", value: currentUser?.branch },
     { label: "Year", value: currentUser?.year ? `Year ${currentUser.year}` : "—" },
     { label: "CGPA", value: currentUser?.cgpa },
-    { label: "Resume", value: currentUser?.resume },
   ];
 
   return (
@@ -121,8 +127,20 @@ function StudentProfile() {
                     <Input id="p-name" required value={form.name} onChange={set("name")} />
                   </div>
                   <div className="space-y-1">
+                    <Label htmlFor="p-username">Username *</Label>
+                    <Input id="p-username" required value={form.username} onChange={set("username")} />
+                  </div>
+                  <div className="space-y-1">
                     <Label htmlFor="p-email">Email *</Label>
                     <Input id="p-email" type="email" required value={form.email} onChange={set("email")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="p-contact">Contact *</Label>
+                    <Input id="p-contact" required value={form.contact} onChange={set("contact")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="p-college">College Name *</Label>
+                    <Input id="p-college" required value={form.collegeName} onChange={set("collegeName")} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="p-branch">Branch *</Label>
@@ -135,10 +153,6 @@ function StudentProfile() {
                   <div className="space-y-1">
                     <Label htmlFor="p-cgpa">CGPA *</Label>
                     <Input id="p-cgpa" type="number" step="0.01" min="0" max="10" required value={form.cgpa} onChange={set("cgpa")} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="p-resume">Resume filename *</Label>
-                    <Input id="p-resume" required value={form.resume} onChange={set("resume")} />
                   </div>
                 </div>
                 <div className="space-y-1">

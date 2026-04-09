@@ -126,9 +126,11 @@ export function PlacementDataProvider({ children }) {
         email: data.email,
         password: data.password,
         branch: data.branch,
-        resume: data.resume,
         cgpa: parseFloat(data.cgpa),
         year: parseInt(data.year),
+        username: data.username,
+        collegeName: data.collegeName,
+        contact: data.contact,
       });
       return { ok: true };
     } catch (e) {
@@ -144,6 +146,10 @@ export function PlacementDataProvider({ children }) {
         companyName: data.companyName,
         email: data.email,
         password: data.password,
+        username: "",
+        contact: "",
+        companyMail: "",
+        location: "",
       });
       return { ok: true };
     } catch (e) {
@@ -172,9 +178,11 @@ export function PlacementDataProvider({ children }) {
         email: data.email,
         password: data.password || currentUser.password,
         branch: data.branch,
-        resume: data.resume,
         cgpa: parseFloat(data.cgpa),
         year: parseInt(data.year),
+        username: data.username || currentUser.username,
+        collegeName: data.collegeName || currentUser.collegeName,
+        contact: data.contact || currentUser.contact,
       });
       persist({ ...currentUser, ...data }, currentRole, session?.token);
       return { ok: true };
