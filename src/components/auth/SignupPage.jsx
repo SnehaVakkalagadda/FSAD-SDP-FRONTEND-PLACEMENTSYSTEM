@@ -156,8 +156,24 @@ function SignupPage() {
                     <Input placeholder="e.g. TechCorp Solutions" required value={ef.companyName} onChange={em("companyName")} />
                   </div>
                   <div className="space-y-1">
+                    <Label>Username *</Label>
+                    <Input required value={ef.username} onChange={em("username")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Contact *</Label>
+                    <Input placeholder="e.g. 8374829365" required value={ef.contact} onChange={em("contact")} />
+                  </div>
+                  <div className="space-y-1">
                     <Label>Email *</Label>
                     <Input type="email" placeholder="hr@company.com" required value={ef.email} onChange={em("email")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Location *</Label>
+                    <Input placeholder="e.g. Hyderabad" required value={ef.location} onChange={em("location")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Company Email *</Label>
+                    <Input type="email" placeholder="techcorp@company.com" required value={ef.companyMail} onChange={em("companyMail")} />
                   </div>
                   <div className="space-y-1">
                     <Label>Password *</Label>
