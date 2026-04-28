@@ -28,6 +28,11 @@ export function PlacementDataProvider({ children }) {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
   }
 
+  // Called by LoginPage after OTP verified — stores user+token in session
+  function persistLogin(user, role, token) {
+    persist(user, role, token);
+  }
+
   // ── Data loaders ──────────────────────────────────────────────────────────
 
   async function loadStudentJobs() {
@@ -55,7 +60,7 @@ export function PlacementDataProvider({ children }) {
     try {
       const [appsRes, jobsRes] = await Promise.allSettled([
         API.get("/officer/applications"),
-        API.get("/officer/viewjobs"),
+        API.get("/student/viewjobs"),
       ]);
       setApplications(appsRes.status === "fulfilled" && Array.isArray(appsRes.value.data) ? appsRes.value.data : []);
       setJobs(jobsRes.status === "fulfilled" && Array.isArray(jobsRes.value.data) ? jobsRes.value.data : []);
@@ -84,43 +89,9 @@ export function PlacementDataProvider({ children }) {
     if (session.role === "employer") loadEmployerJobs(session.user.id);
     if (session.role === "placement-officer") loadOfficerApplications();
     if (session.role === "admin") loadAdminData();
-  }, [session?.role, session?.user?.id]); // eslint-disable-line
+  }, [session?.role, session?.user?.id, session?.user?.username]); // eslint-disable-line
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-
-  const ROLE_MAP = {
-    student: "STUDENT",
-    employer: "EMPLOYER",
-    "placement-officer": "PLACEMENT OFFICER",
-    admin: "ADMIN",
-  };
-
-  // Backend must return: { token: "...", user: { id, name, email, ... } }
-  const login = async ({ role, email, password }) => {
-    try {
-      const res = await API.post("/auth/login", {
-        login: email,
-        password,
-        role: ROLE_MAP[role],
-      });
-
-      const token = res.data?.token;
-      const user = res.data?.user;
-
-      if (!token) return { ok: false, message: "No token received from server" };
-      if (!user || typeof user !== "object") return { ok: false, message: "No user data received from server" };
-
-      persist(user, role, token);
-      return { ok: true };
-    } catch (e) {
-      const status = e.response?.status;
-      const data = e.response?.data;
-      if (status === 401 || status === 403) return { ok: false, message: "Invalid credentials" };
-      if (status === 404) return { ok: false, message: "User not found" };
-      if (!e.response) return { ok: false, message: "Cannot connect to server. Make sure backend is running on port 2007." };
-      return { ok: false, message: typeof data === "string" ? data : "Login failed. Try again." };
-    }
-  };
 
   const studentRegister = async (data) => {
     try {
@@ -137,9 +108,9 @@ export function PlacementDataProvider({ children }) {
       });
       return { ok: true };
     } catch (e) {
-      const data = e.response?.data;
-      if (!e.response) return { ok: false, message: "Cannot connect to server. Make sure backend is running on port 2007." };
-      return { ok: false, message: typeof data === "string" ? data : "Registration failed" };
+      if (!e.response) return { ok: false, message: "Cannot connect to server" };
+      const msg = typeof e.response.data === "string" ? e.response.data : "Registration failed. Email/username/contact may already exist.";
+      return { ok: false, message: msg };
     }
   };
 
@@ -149,16 +120,12 @@ export function PlacementDataProvider({ children }) {
         companyName: data.companyName,
         email: data.email,
         password: data.password,
-        username: data.username || "",
-        contact: data.contact || "",
-        companyMail: data.companyMail || "",
-        location: data.location || "",
       });
       return { ok: true };
     } catch (e) {
-      const d = e.response?.data;
-      if (!e.response) return { ok: false, message: "Cannot connect to server. Make sure backend is running on port 2007." };
-      return { ok: false, message: typeof d === "string" ? d : "Registration failed" };
+      if (!e.response) return { ok: false, message: "Cannot connect to server" };
+      const msg = typeof e.response.data === "string" ? e.response.data : "Registration failed. Email may already exist.";
+      return { ok: false, message: msg };
     }
   };
 
@@ -268,9 +235,6 @@ export function PlacementDataProvider({ children }) {
         name: data.name.trim(),
         email: data.email.trim(),
         password: data.password,
-        username: data.username.trim(),
-        institutename: data.institutename.trim(),
-        contact: data.contact.trim(),
       });
       try {
         const oRes = await API.get("/admin/displayofficers");
@@ -278,9 +242,8 @@ export function PlacementDataProvider({ children }) {
       } catch { /* no officers yet */ }
       return { ok: true, message: typeof res.data === "string" ? res.data : "Officer added successfully" };
     } catch (e) {
-      const status = e.response?.status;
       const d = e.response?.data;
-      return { ok: false, message: typeof d === "string" ? d : status === 500 ? "Server error — email may already exist" : "Add officer failed" };
+      return { ok: false, message: typeof d === "string" ? d : "Add officer failed" };
     }
   };
 
@@ -318,7 +281,8 @@ export function PlacementDataProvider({ children }) {
     <PlacementDataContext.Provider value={{
       currentUser, currentRole,
       jobs, applications, students, employers, officers,
-      studentRegister, employerRegister, login, logout,
+      persistLogin,
+      studentRegister, employerRegister, logout,
       updateStudentProfile, applyJob,
       updateEmployerProfile, postJob, loadApplicationsForJob,
       updateApplicationStatus,

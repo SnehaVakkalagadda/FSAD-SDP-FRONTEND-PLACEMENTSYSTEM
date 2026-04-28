@@ -1,36 +1,33 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "/api",
+  baseURL: "http://localhost:2007",
   headers: { "Content-Type": "application/json" },
 });
 
-// Attach JWT token to every request from sessionStorage
+// Attach JWT token to every request
 API.interceptors.request.use((config) => {
-  try {
-    const raw = sessionStorage.getItem("placement_session");
-    if (raw) {
+  const raw = sessionStorage.getItem("placement_session");
+  if (raw) {
+    try {
       const session = JSON.parse(raw);
       if (session?.token) {
         config.headers["Authorization"] = `Bearer ${session.token}`;
       }
-    }
-  } catch { /* ignore parse errors */ }
+    } catch { /* ignore */ }
+  }
   return config;
 });
 
-// On 401 (token expired / invalid) — clear session and redirect to login
-// Skip redirect for public auth endpoints so login errors show properly
+// Public endpoints — never redirect on 401
+const PUBLIC = ["/auth/login", "/user/verify-otp", "/user/send-otp", "/otp/", "/student/register", "/employer/register"];
+
 API.interceptors.response.use(
   (res) => res,
   (error) => {
     const url = error.config?.url || "";
-    const isPublicEndpoint =
-      url.includes("/auth/login") ||
-      url.includes("/student/register") ||
-      url.includes("/employer/register");
-
-    if (error.response?.status === 401 && !isPublicEndpoint) {
+    const isPublic = PUBLIC.some((p) => url.includes(p));
+    if (error.response?.status === 401 && !isPublic) {
       sessionStorage.removeItem("placement_session");
       window.location.href = "/login";
     }
