@@ -24,7 +24,7 @@ function SignupPage() {
   // Employer fields: companyName, email, password
   const [ef, setEf] = useState({
     companyName: "", email: "", password: "", confirmPassword: "",
-    username: "", contact: "", companyMail: "", location: "",
+    username: "", companyMail: "", location: "", contact: "",
   });
 
   const s = (k) => (e) => setSf({ ...sf, [k]: e.target.value });

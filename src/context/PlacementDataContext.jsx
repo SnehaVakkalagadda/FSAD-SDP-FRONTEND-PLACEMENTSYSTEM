@@ -120,11 +120,15 @@ export function PlacementDataProvider({ children }) {
         companyName: data.companyName,
         email: data.email,
         password: data.password,
+        username: data.username,
+        companyMail: data.companyMail,
+        location: data.location,
+        contact: data.contact,
       });
       return { ok: true };
     } catch (e) {
       if (!e.response) return { ok: false, message: "Cannot connect to server" };
-      const msg = typeof e.response.data === "string" ? e.response.data : "Registration failed. Email may already exist.";
+      const msg = typeof e.response.data === "string" ? e.response.data : "Registration failed. Email/username/contact may already exist.";
       return { ok: false, message: msg };
     }
   };
