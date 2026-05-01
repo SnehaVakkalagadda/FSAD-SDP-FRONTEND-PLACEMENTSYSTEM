@@ -18,7 +18,7 @@ function SignupPage() {
   const [sf, setSf] = useState({
     name: "", email: "", password: "", confirmPassword: "",
     branch: "", cgpa: "", year: "",
-    username: "", collegeName: "", contact: "",
+    username: "", collegeName: "", contact: "",resume: null,
   });
 
   // Employer fields: companyName, email, password
@@ -140,6 +140,15 @@ function SignupPage() {
                       <p className="text-xs text-red-500">Passwords do not match</p>
                     )}
                   </div>
+                  <div className="space-y-1 col-span-2">
+  <Label>Resume PDF *</Label>
+  <Input
+    type="file"
+    accept="application/pdf"
+    required
+    onChange={(e) => setSf({ ...sf, resume: e.target.files[0] })}
+  />
+</div>
                 </div>
                 <button type="submit" disabled={loading} style={{ width: "100%", background: loading ? "#93c5fd" : "var(--primary)", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", fontSize: 14, marginTop: 4 }}>
                   {loading ? "Registering..." : "Create Student Account"}

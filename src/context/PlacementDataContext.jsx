@@ -93,26 +93,35 @@ export function PlacementDataProvider({ children }) {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
-  const studentRegister = async (data) => {
-    try {
-      await API.post("/student/register", {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        branch: data.branch,
-        cgpa: parseFloat(data.cgpa),
-        year: parseInt(data.year),
-        username: data.username,
-        collegeName: data.collegeName,
-        contact: data.contact,
-      });
-      return { ok: true };
-    } catch (e) {
-      if (!e.response) return { ok: false, message: "Cannot connect to server" };
-      const msg = typeof e.response.data === "string" ? e.response.data : "Registration failed. Email/username/contact may already exist.";
-      return { ok: false, message: msg };
-    }
-  };
+  cconst studentRegister = async (data) => {
+  try {
+    const formData = new FormData();
+
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    formData.append("branch", data.branch);
+    formData.append("cgpa", parseFloat(data.cgpa));
+    formData.append("year", parseInt(data.year));
+    formData.append("username", data.username);
+    formData.append("collegeName", data.collegeName);
+    formData.append("contact", data.contact);
+    formData.append("file", data.resume);
+
+    await API.post("/student/register", formData);
+
+    return { ok: true };
+  } catch (e) {
+    if (!e.response) return { ok: false, message: "Cannot connect to server" };
+
+    const msg =
+      typeof e.response.data === "string"
+        ? e.response.data
+        : "Registration failed. Email/username/contact may already exist.";
+
+    return { ok: false, message: msg };
+  }
+};
 
   const employerRegister = async (data) => {
     try {
