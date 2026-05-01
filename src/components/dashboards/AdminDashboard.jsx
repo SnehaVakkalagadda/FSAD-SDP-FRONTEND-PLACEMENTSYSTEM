@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router";
 import { DashboardLayout } from "../common/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { UserManagement } from "../admin/UserManagement";
@@ -8,13 +7,7 @@ import { LayoutDashboard, Users, Settings } from "lucide-react";
 import { usePlacementData } from "../../context/PlacementDataContext";
 
 function AdminDashboard() {
-  const navigate = useNavigate();
-  const { currentUser, currentRole } = usePlacementData();
-
-  if (!currentUser || currentRole !== "admin") {
-    navigate("/login");
-    return null;
-  }
+  const { currentUser } = usePlacementData();
 
   // Admin entity has: username, password
   return (

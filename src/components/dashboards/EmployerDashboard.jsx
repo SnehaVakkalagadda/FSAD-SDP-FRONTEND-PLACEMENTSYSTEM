@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import { DashboardLayout } from "../common/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { PostedJobs } from "../employer/PostedJobs";
@@ -26,8 +25,7 @@ const btnOutline = {
 };
 
 function EmployerDashboard() {
-  const navigate = useNavigate();
-  const { currentUser, currentRole, updateEmployerProfile } = usePlacementData();
+  const { currentUser, updateEmployerProfile } = usePlacementData();
   const [tab, setTab] = useState("jobs");
   const [selectedJob, setSelectedJob] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -37,11 +35,6 @@ function EmployerDashboard() {
     email: currentUser?.email || "",
     password: "",
   });
-
-  if (!currentUser || currentRole !== "employer") {
-    navigate("/login");
-    return null;
-  }
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 

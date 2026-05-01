@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import { DashboardLayout } from "../common/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { JobExplorer } from "../student/JobExplorer";
@@ -9,14 +8,8 @@ import { Briefcase, FileText, User } from "lucide-react";
 import { usePlacementData } from "../../context/PlacementDataContext";
 
 function StudentDashboard() {
-  const navigate = useNavigate();
-  const { currentUser, currentRole } = usePlacementData();
+  const { currentUser } = usePlacementData();
   const [tab, setTab] = useState("jobs");
-
-  if (!currentUser || currentRole !== "student") {
-    navigate("/login");
-    return null;
-  }
 
   return (
     <DashboardLayout userName={currentUser.name} userEmail={currentUser.email} userRole="student">

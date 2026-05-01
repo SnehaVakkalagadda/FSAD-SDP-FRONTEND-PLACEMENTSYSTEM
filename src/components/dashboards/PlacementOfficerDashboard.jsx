@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router";
 import { DashboardLayout } from "../common/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { PlacementRecords } from "../placement-officer/PlacementRecords";
@@ -7,13 +6,7 @@ import { FileText, BarChart3 } from "lucide-react";
 import { usePlacementData } from "../../context/PlacementDataContext";
 
 function PlacementOfficerDashboard() {
-  const navigate = useNavigate();
-  const { currentUser, currentRole } = usePlacementData();
-
-  if (!currentUser || currentRole !== "placement-officer") {
-    navigate("/login");
-    return null;
-  }
+  const { currentUser } = usePlacementData();
 
   return (
     <DashboardLayout userName={currentUser.name} userEmail={currentUser.email} userRole="placement-officer">
