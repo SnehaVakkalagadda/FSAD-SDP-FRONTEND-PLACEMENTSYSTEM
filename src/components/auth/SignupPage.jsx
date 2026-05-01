@@ -18,7 +18,7 @@ function SignupPage() {
   const [sf, setSf] = useState({
     name: "", email: "", password: "", confirmPassword: "",
     branch: "", cgpa: "", year: "",
-    username: "", collegeName: "", contact: "",resume: null,
+    username: "", collegeName: "", contact: "", resume: null,
   });
 
   // Employer fields: companyName, email, password

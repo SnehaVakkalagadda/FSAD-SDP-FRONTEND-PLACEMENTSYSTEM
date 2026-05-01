@@ -93,7 +93,7 @@ export function PlacementDataProvider({ children }) {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
-  cconst studentRegister = async (data) => {
+  const studentRegister = async (data) => {
   try {
     const formData = new FormData();
 
